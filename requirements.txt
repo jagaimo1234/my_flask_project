@@ -1,5 +1,6 @@
-Flask==2.2.2
-google-api-python-client==2.132.0
-google-auth==2.30.0
-google-auth-httplib2==0.2.0
-google-auth-oauthlib==1.2.0
+Flask
+google-api-python-client
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+gunicorn
