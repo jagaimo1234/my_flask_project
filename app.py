@@ -6,7 +6,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
 app = Flask(__name__)
-app.secret_key = 'your_generated_secret_key'
+app.secret_key = 'your_generated_secret_key'  # 生成された秘密鍵をここに設定します
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 SERVICE_ACCOUNT_INFO = json.loads(os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON'))
@@ -56,19 +56,21 @@ def get_price_for_id(event_name, item_id):
     result = sheet.values().get(spreadsheetId=NEW_SPREADSHEET_ID, range=range_name).execute()
     price = result.get('values', [[None]])[0][0]
 
-    return price
+    return int(price) if price is not None else None
 
 @app.route('/')
 def index():
     event_names = get_event_names()
     current_event = session.get('event_name', '未設定')
     selected_price_event = session.get('price_event', '未設定')
-    return render_template('index.html', customer_count=customer_count + 1, current_event=current_event, event_names=event_names, selected_price_event=selected_price_event)
+    total_sales = session.get('total_sales', 0)
+    return render_template('index.html', customer_count=customer_count + 1, current_event=current_event, event_names=event_names, selected_price_event=selected_price_event, total_sales=total_sales)
 
 @app.route('/set_event', methods=['POST'])
 def set_event():
     event_name = request.form.get('event_name')
     session['event_name'] = event_name
+    session['total_sales'] = 0  # イベント設定時に合計売上をリセット
     return redirect(url_for('index'))
 
 @app.route('/set_price_event', methods=['POST'])
@@ -82,6 +84,7 @@ def reset_event():
     global customer_count
     session.pop('event_name', None)
     session.pop('price_event', None)
+    session.pop('total_sales', None)
     customer_count = 0
     return redirect(url_for('index'))
 
@@ -113,6 +116,7 @@ def record_sale():
         return redirect(url_for('index'))
 
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    total_sales = session.get('total_sales', 0)  # 合計売上をセッションから取得
 
     try:
         sheet_metadata = sheets_service.spreadsheets().get(spreadsheetId=SPREADSHEET_ID).execute()
@@ -135,7 +139,7 @@ def record_sale():
                 body=body
             ).execute()
             
-            header_values = [["アイテム番号", "顧客番号", "タイムスタンプ", "性別", "年代", "特徴", "支払い方法"]]
+            header_values = [["アイテム番号", "顧客番号", "タイムスタンプ", "性別", "年代", "特徴", "支払い方法", "金額"]]
             header_body = {
                 'values': header_values
             }
@@ -153,16 +157,17 @@ def record_sale():
         return redirect(url_for('index'))
 
     values = []
-    total_sales = 0
     for sale, quantity in zip(sales, quantities):
         price = get_price_for_id(price_event, sale.strip())
         if price is None:
             flash(f'アイテム番号 {sale} の価格が見つかりません。')
             customer_count -= 1
             return redirect(url_for('index'))
-        total_sales += int(price) * quantity
+        total_sales += price * quantity
         for _ in range(quantity):
-            values.append([sale.strip(), customer_id, timestamp, gender, age_group, features, payment_method])
+            values.append([sale.strip(), customer_id, timestamp, gender, age_group, features, payment_method, price])
+
+    session['total_sales'] = total_sales  # 合計売上をセッションに保存
 
     body = {
         'values': values
