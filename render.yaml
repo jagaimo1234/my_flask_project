@@ -10,6 +10,6 @@ services:
       - key: SPREADSHEET_ID
         value: 1REDUL2cKWozcH1wVOJOPBbySEGENA8t2RstmgrWQDY4
       - key: NEW_SPREADSHEET_ID
-        value: 1mt3SnDPuMOXF4QQazKlJU1iLsL-4EThLGRhtfe-K7Wk
+        value: 1ypknAict_qBGYcB9t-Fit8XsVBONMEkwBfKLKxXimWA
       - key: NEW_SHEET_NAME
-        value: sheet1
+        value: 価格表
