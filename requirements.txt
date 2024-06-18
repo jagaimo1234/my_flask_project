@@ -3,3 +3,4 @@ gunicorn==20.1.0
 google-api-python-client==2.22.0
 google-auth==1.30.0
 google-auth-oauthlib==0.4.4
+Werkzeug==2.0.3
