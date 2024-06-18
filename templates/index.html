@@ -16,6 +16,17 @@
         <button type="submit">イベント名をリセット</button>
     </form>
     <hr>
+    <p>金額参照イベント: {{ selected_price_event }}</p>
+    <form action="{{ url_for('set_price_event') }}" method="post">
+        <label for="price_event">金額参照イベントを選択:</label><br>
+        <select id="price_event" name="price_event" required>
+            {% for event in event_names %}
+                <option value="{{ event }}">{{ event }}</option>
+            {% endfor %}
+        </select><br><br>
+        <button type="submit">金額参照イベントを設定</button>
+    </form>
+    <hr>
     <form action="{{ url_for('record_sale') }}" method="post">
         <label for="sales">購入アイテム番号（カンマ区切り）:</label><br>
         <input type="text" id="sales" name="sales" required><br><br>
@@ -66,5 +77,6 @@
     {% endwith %}
 
     <p>現在の顧客番号: {{ customer_count }}</p>
+    <p>合計売上: {{ total_sales }} 円</p>
 </body>
 </html>
